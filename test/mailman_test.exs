@@ -158,7 +158,7 @@ Pictures!
     {:ok, message} = Task.await(MyApp.ExternalTextMailer.deliver(
       email_with_external_text))
     email = Mailman.Email.parse! message
-    assert email.text == 
+    assert email.text ==
            EEx.eval_file(email_with_external_text.text,
                          email_with_external_text.data)
   end
@@ -177,7 +177,7 @@ Pictures!
         }
     end
   end
-  
+
   def email_with_external_html do
     %Mailman.Email{
       subject: "Hello Mailman!",
@@ -198,7 +198,7 @@ Pictures!
     {:ok, message} = Task.await(MyApp.ExternalHTMLMailer.deliver(
       email_with_external_html))
     email = Mailman.Email.parse! message
-    assert email.html == 
+    assert email.html ==
            EEx.eval_file(email_with_external_html.html,
                          email_with_external_html.data)
   end
@@ -220,7 +220,7 @@ Pictures!
         }
     end
   end
-  
+
   def email_with_template_paths do
     %Mailman.Email{
       subject: "Hello Mailman!",
@@ -236,16 +236,37 @@ Pictures!
       html: "email.html.eex"
       }
   end
-  
+
   test "should load email parts from external file based on x_file_path" do
     {:ok, message} = Task.await(MyApp.ExternalTemplatesMailer.deliver(
       email_with_template_paths))
     email = Mailman.Email.parse! message
-    assert email.html == 
+    assert email.html ==
            EEx.eval_file("test/templates/#{email_with_template_paths.html}",
                          email_with_template_paths.data)
     assert email.text ==
            EEx.eval_file("test/templates/#{email_with_template_paths.text}",
                          email_with_template_paths.data)
   end
+
+  defmodule MyApp.PlainComposerMailer do
+    def deliver(email) do
+      Mailman.deliver(email, config)
+    end
+
+    def config do
+      %Mailman.Context{
+          config:   %Mailman.TestConfig{},
+          composer: %Mailman.PlainComposeConfig{}
+        }
+    end
+  end
+
+  test "should email with a plain text as passed" do
+    {:ok, message} = Task.await(MyApp.PlainComposerMailer.deliver(
+      testing_email))
+    email = Mailman.Email.parse! message
+    assert email.text == testing_email.text
+  end
+
 end
